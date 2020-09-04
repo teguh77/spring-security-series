@@ -1,45 +1,47 @@
 package io.tam.ssc1.config;
 
-import io.tam.ssc1.security.CustomAuthenticationProvider;
+import io.tam.ssc1.security.filter.CustomAuthenticationFilter;
+import io.tam.ssc1.security.provider.CustomAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
 @Configuration
-public class AppConfig
-        extends WebSecurityConfigurerAdapter {
+public class AppConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private CustomAuthenticationProvider customAuthenticationProvider;
+    private CustomAuthenticationFilter customAuthenticationFilter;
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        InMemoryUserDetailsManager uds = new InMemoryUserDetailsManager();
-        UserDetails user = User.withUsername("john")
-                        .password("pass")
-                        .authorities("read")
-                        .build();
-        uds.createUser(user);
-
-        return uds;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
-    }
+    @Autowired
+    private CustomAuthenticationProvider authenticationProvider;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        // bisa chaining authenticationprovider lebih dari satu
-        auth.authenticationProvider(customAuthenticationProvider);
+        auth.authenticationProvider(authenticationProvider);
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // specify where filter is placed (at BasicAuthenticationFilter.class)
+        http.addFilterAt(customAuthenticationFilter, BasicAuthenticationFilter.class);
+
+        http.authorizeRequests()
+                .anyRequest()
+                .permitAll();
+    }
+
+    @Bean
+    @Override
+    protected AuthenticationManager authenticationManager() throws Exception {
+        return super.authenticationManager();
     }
 }
