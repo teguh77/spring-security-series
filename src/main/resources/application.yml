@@ -1,6 +1,7 @@
-spring:
-  datasource:
-    url: jdbc:mysql://localhost/spring
-    username: root
-    password: mysql
-
+################# just requirement for jpa ######################3
+#spring:
+#  datasource:
+#    url: jdbc:mysql://localhost/spring
+#    username: root
+#    password: mysql
+#
